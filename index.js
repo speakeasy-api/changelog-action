@@ -6,7 +6,7 @@ const fs = require('fs').promises
 const { setTimeout } = require('timers/promises')
 
 const types = [
-  { types: ['feat', 'feature'], header: 'New Features', icon: ':sparkles:' },
+  { types: ['feat', 'feature'], header: 'New Features', icon: ':bee:' },
   { types: ['fix', 'bugfix'], header: 'Bug Fixes', icon: ':bug:', relIssuePrefix: 'fixes' },
   { types: ['perf'], header: 'Performance Improvements', icon: ':zap:' },
   { types: ['refactor'], header: 'Refactors', icon: ':recycle:' },
@@ -21,8 +21,8 @@ const types = [
 const rePrId = /#([0-9]+)/g
 const rePrEnding = /\(#([0-9]+)\)$/
 
-function buildSubject ({ writeToFile, subject, author, authorUrl, owner, repo }) {
-  const hasPR = rePrEnding.test(subject)
+function buildSubject ({ writeToFile, subject, author, authorUrl, owner, repo, includePRLinks }) {
+  const hasPR = rePrEnding.test(subject) && includePRLinks
   const prs = []
   let output = subject
   if (writeToFile) {
@@ -70,6 +70,7 @@ async function main () {
   const useGitmojis = core.getBooleanInput('useGitmojis')
   const includeInvalidCommits = core.getBooleanInput('includeInvalidCommits')
   const reverseOrder = core.getBooleanInput('reverseOrder')
+  const includePRLinks = core.getBooleanInput('includePRLinks')
   const gh = github.getOctokit(token)
   const owner = github.context.repo.owner
   const repo = github.context.repo.repo
@@ -79,9 +80,8 @@ async function main () {
   let previousTag = null
 
   if (tag && (fromTag || toTag)) {
-    return core.setFailed(`Must provide EITHER input tag OR (fromTag and toTag), not both!`)
+    return core.setFailed('Must provide EITHER input tag OR (fromTag and toTag), not both!')
   } else if (tag) {
-
     // GET LATEST + PREVIOUS TAGS
 
     core.info(`Using input tag: ${tag}`)
@@ -115,13 +115,12 @@ async function main () {
     }
 
     if (latestTag.name !== tag) {
-      return core.setFailed(`Provided tag doesn\'t match latest tag ${tag}.`)
+      return core.setFailed(`Provided tag doesn't match latest tag ${tag}.`)
     }
 
     core.info(`Using latest tag: ${latestTag.name}`)
     core.info(`Using previous tag: ${previousTag.name}`)
   } else if (fromTag && toTag) {
-
     // GET FROM + TO TAGS FROM INPUTS
 
     latestTag = { name: fromTag }
@@ -129,7 +128,7 @@ async function main () {
 
     core.info(`Using tag range: ${fromTag} to ${toTag}`)
   } else {
-    return core.setFailed(`Must provide either input tag OR (fromTag and toTag). None were provided!`)
+    return core.setFailed('Must provide either input tag OR (fromTag and toTag). None were provided!')
   }
 
   // GET COMMITS
@@ -230,7 +229,8 @@ async function main () {
         author: breakChange.author,
         authorUrl: breakChange.authorUrl,
         owner,
-        repo
+        repo,
+        includePRLinks
       })
       const subjectVar = buildSubject({
         writeToFile: false,
@@ -238,7 +238,8 @@ async function main () {
         author: breakChange.author,
         authorUrl: breakChange.authorUrl,
         owner,
-        repo
+        repo,
+        includePRLinks
       })
       changesFile.push(`- due to [\`${breakChange.sha.substring(0, 7)}\`](${breakChange.url}) - ${subjectFile.output}:\n\n${body}\n`)
       changesVar.push(`- due to [\`${breakChange.sha.substring(0, 7)}\`](${breakChange.url}) - ${subjectVar.output}:\n\n${body}\n`)
@@ -271,7 +272,8 @@ async function main () {
         author: commit.author,
         authorUrl: commit.authorUrl,
         owner,
-        repo
+        repo,
+        includePRLinks
       })
       const subjectVar = buildSubject({
         writeToFile: false,
@@ -279,7 +281,8 @@ async function main () {
         author: commit.author,
         authorUrl: commit.authorUrl,
         owner,
-        repo
+        repo,
+        includePRLinks
       })
       changesFile.push(`- [\`${commit.sha.substring(0, 7)}\`](${commit.url}) - ${scope}${subjectFile.output}`)
       changesVar.push(`- [\`${commit.sha.substring(0, 7)}\`](${commit.url}) - ${scope}${subjectVar.output}`)

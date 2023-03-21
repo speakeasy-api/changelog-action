@@ -1,5 +1,5 @@
-name: 'Changelog from Conventional Commits'
-description: 'Generate and update the CHANGELOG from conventional commits since latest tag or from a given tag range'
+name: "Changelog from Conventional Commits"
+description: "Generate and update the CHANGELOG from conventional commits since latest tag or from a given tag range"
 author: Nicolas Giard
 inputs:
   token:
@@ -21,29 +21,33 @@ inputs:
   writeToFile:
     description: Should CHANGELOG.md be updated with latest changelog
     required: false
-    default: 'true'
+    default: "true"
   includeRefIssues:
     description: Should the changelog include the issues referenced for each PR.
     required: false
-    default: 'true'
+    default: "true"
   useGitmojis:
     description: Prepend type headers with their corresponding gitmoji
     required: false
-    default: 'true'
+    default: "true"
   includeInvalidCommits:
     description: Whether to include commits that don't respect the Conventional Commits format
     required: false
-    default: 'false'
+    default: "false"
   reverseOrder:
     description: List commits in reverse order (from newer to older) instead of the default (older to newer).
     required: false
-    default: 'false'
+    default: "false"
+  includePRLinks:
+    description: Whether to include links to the PRs in the changelog
+    required: false
+    default: "true"
 outputs:
   changelog:
     description: Generated changelog
 runs:
-  using: 'node16'
-  main: 'dist/index.js'
+  using: "node16"
+  main: "dist/index.js"
 branding:
   icon: wind
   color: red
